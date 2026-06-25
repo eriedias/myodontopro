@@ -11,6 +11,13 @@ import {
 } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { Prisma } from "@/lib/generated/prisma/client";
+
+type AppointmentWithService = Prisma.AppointmentGetPayload<{
+  include: {
+    service: true;
+  };
+}>;
 
 interface AppointmentsListProps {
   times: string[];
@@ -34,7 +41,7 @@ export function AppointmentsList({ times }: AppointmentsListProps) {
 
       const response = await fetch(url);
 
-      const json = await response.json();
+      const json = (await response.json()) as AppointmentWithService[];
 
       console.log(json);
 
@@ -44,7 +51,35 @@ export function AppointmentsList({ times }: AppointmentsListProps) {
 
       return json;
     },
+    staleTime: 20000, // 20 segundos
+    refetchInterval: 60000, // de 60 em 60 segundos faz a requisição novamente para atualizar a lista de agendamentos
   });
+
+  // Monta occupantMap slot > appointment
+  // Se um Appointment começa no time (15:00) e tem requiredSlots 2
+  // occupantMap["15:00", appoitment] occupantMap["15:30", appoitment]
+  const occupantMap: Record<string, AppointmentWithService> = {};
+
+  if (data && data.length > 0) {
+    for (const appointment of data) {
+      // Calcular quantos slots necessarios ocupa
+      const requiredSlots = Math.ceil(appointment.service.duration / 30);
+
+      // Descobrir qual é o indice do nosso array de horarios esse agendamento começa.
+      const startIndex = times.indexOf(appointment.time);
+
+      // Se encontrou o index
+      if (startIndex !== -1) {
+        for (let i = 0; i < requiredSlots; i++) {
+          const slotIndex = startIndex + i;
+
+          if (slotIndex < times.length) {
+            occupantMap[times[slotIndex]] = appointment;
+          }
+        }
+      }
+    }
+  }
 
   return (
     <Card>
@@ -58,17 +93,41 @@ export function AppointmentsList({ times }: AppointmentsListProps) {
 
       <CardContent>
         <ScrollArea className="h-[calc(100vh-20rem)] lg:h-[calc(100vh-15rem)] pr-4">
-          {times.map((slot) => {
-            return (
-              <div
-                key={slot}
-                className="flex items-center py-2 border-t last:border-b"
-              >
-                <div className="w-16 text-sm font-semibold">{slot}</div>
-                <div className="flex-1 text-sm">Disponível</div>
-              </div>
-            );
-          })}
+          {isLoading ? (
+            <p>Carregando agenda...</p>
+          ) : (
+            times.map((slot) => {
+              // ocupantMap["15:00"]
+              const occupant = occupantMap[slot];
+
+              if (occupant) {
+                return (
+                  <div
+                    key={slot}
+                    className="flex items-center py-2 border-t last:border-b"
+                  >
+                    <div className="w-16 text-sm font-semibold">{slot}</div>
+                    <div className="flex-1 text-sm">
+                      <div className="font-semibold">{occupant.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {occupant.phone}
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={slot}
+                  className="flex items-center py-2 border-t last:border-b"
+                >
+                  <div className="w-16 text-sm font-semibold">{slot}</div>
+                  <div className="flex-1 text-sm">Disponível</div>
+                </div>
+              );
+            })
+          )}
         </ScrollArea>
       </CardContent>
     </Card>
