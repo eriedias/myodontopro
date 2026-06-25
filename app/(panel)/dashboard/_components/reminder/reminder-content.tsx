@@ -5,7 +5,7 @@ import { useReminderForm, ReminderFormdata } from "./reminder-form"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Controller } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
-import { createReminder } from "../_actions/create-reminder";
+import { createReminder } from "../../_actions/create-reminder";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 

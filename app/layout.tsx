@@ -5,6 +5,8 @@ import { SessionAuthProvider } from "@/components/session-auth";
 import { Toaster } from "sonner";
 // https://sonner.emilkowal.ski/
 
+import { QueryClientContext } from "@/providers/queryclient";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -32,10 +34,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <SessionAuthProvider>
-          <Toaster
-            duration={2500}
-          />
-          {children}
+          <QueryClientContext>
+            <Toaster duration={2500} />
+            {children}
+          </QueryClientContext>
         </SessionAuthProvider>
       </body>
     </html>

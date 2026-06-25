@@ -5,7 +5,7 @@ import { Card, CardContent, CardTitle, CardHeader } from "@/components/ui/card"
 import { Reminder } from "@/lib/generated/prisma/client"
 import { Plus, Trash } from "lucide-react"
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { deleteReminder } from "../_actions/delete-reminder"
+import { deleteReminder } from "../../_actions/delete-reminder"
 import { toast } from 'sonner'
 import { useRouter } from "next/navigation"
 import {
