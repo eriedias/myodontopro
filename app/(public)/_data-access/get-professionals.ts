@@ -8,6 +8,9 @@ export async function getProfessionals() {
       where: {
         status: "active",
       },
+      include: {
+        subscription: true,
+      },
     });
 
     return professionals;
