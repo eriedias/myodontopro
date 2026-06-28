@@ -29,16 +29,18 @@ export async function createSubscription({ type }: SubscriptionProps) {
   if (!findUser) {
     return {
       sessionId: "",
-      error: "Falha ao ativar o plano.",
+      error: "Falha ao ativar plano.",
     };
   }
 
   let customerId = findUser.stripe_customer_id;
 
   if (!customerId) {
+    // Caso o user não tenha um stripe_customer_id então criamos ele como cliente
     const stripeCustomer = await stripe.customers.create({
       email: findUser.email,
     });
+
     await prisma.user.update({
       where: {
         id: userId,
@@ -51,6 +53,7 @@ export async function createSubscription({ type }: SubscriptionProps) {
     customerId = stripeCustomer.id;
   }
 
+  // CRIAR O CHECKOUT
   try {
     const stripeCheckoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
